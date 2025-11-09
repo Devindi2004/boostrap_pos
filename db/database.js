@@ -18,4 +18,5 @@ const db = {
 const constants = {
     TAX_RATE: 0.00, // 0% tax for cafe model
     LOW_STOCK_THRESHOLD: 10
+
 };
