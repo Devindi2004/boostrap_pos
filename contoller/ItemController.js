@@ -36,7 +36,14 @@ class ItemController {
         const stock = parseInt(document.getElementById('itemStock').value);
 
         const result = itemModel.addItem({ name, price, stock });
-        alert(result.message);
+
+        Swal.fire({
+            icon: result.success ? 'success' : 'error',
+            title: result.success ? 'Success!' : 'Error!',
+            text: result.message,
+            timer: 3000,
+            showConfirmButton: false
+        });
 
         if (result.success) {
             this.loadMenuItems();
@@ -67,7 +74,14 @@ class ItemController {
         const stock = parseInt(document.getElementById('itemStock').value);
 
         const result = itemModel.updateItem(id, { name, price, stock });
-        alert(result.message);
+
+        Swal.fire({
+            icon: result.success ? 'success' : 'error',
+            title: result.success ? 'Updated!' : 'Error!',
+            text: result.message,
+            timer: 3000,
+            showConfirmButton: false
+        });
 
         if (result.success) {
             this.loadMenuItems();
@@ -75,16 +89,35 @@ class ItemController {
         }
     }
 
-    deleteMenuItem() {
+    async deleteMenuItem() {
         const id = document.getElementById('editItemId').value;
-        if (!id || !confirm('Are you sure you want to delete this item?')) return;
+        if (!id) return;
 
-        const result = itemModel.deleteItem(id);
-        alert(result.message);
+        const confirmation = await Swal.fire({
+            title: 'Delete Item?',
+            text: 'Are you sure you want to delete this item?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        });
 
-        if (result.success) {
-            this.loadMenuItems();
-            this.clearItemForm();
+        if (confirmation.isConfirmed) {
+            const result = itemModel.deleteItem(id);
+
+            Swal.fire({
+                icon: result.success ? 'success' : 'error',
+                title: result.success ? 'Deleted!' : 'Error!',
+                text: result.message,
+                timer: 3000,
+                showConfirmButton: false
+            });
+
+            if (result.success) {
+                this.loadMenuItems();
+                this.clearItemForm();
+            }
         }
     }
 

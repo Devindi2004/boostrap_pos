@@ -1,4 +1,4 @@
-// js/controllers/CustomerController.js
+// CustomerController.js
 
 const customerModel = new CustomerModel();
 
@@ -48,7 +48,14 @@ class CustomerController {
         const phone = document.getElementById('customerPhone').value.trim();
 
         const result = customerModel.addCustomer({ name, email, phone });
-        alert(result.message);
+
+        Swal.fire({
+            icon: result.success ? 'success' : 'error',
+            title: result.success ? 'Success!' : 'Error!',
+            text: result.message,
+            timer: 3000,
+            showConfirmButton: false
+        });
 
         if (result.success) {
             this.loadCustomers();
@@ -79,7 +86,14 @@ class CustomerController {
         const phone = document.getElementById('customerPhone').value.trim();
 
         const result = customerModel.updateCustomer(id, { name, email, phone });
-        alert(result.message);
+
+        Swal.fire({
+            icon: result.success ? 'success' : 'error',
+            title: result.success ? 'Updated!' : 'Error!',
+            text: result.message,
+            timer: 3000,
+            showConfirmButton: false
+        });
 
         if (result.success) {
             this.loadCustomers();
@@ -87,16 +101,35 @@ class CustomerController {
         }
     }
 
-    deleteCustomer() {
+    async deleteCustomer() {
         const id = document.getElementById('editCustomerId').value;
-        if (!id || !confirm('Delete this customer? This cannot be undone.')) return;
+        if (!id) return;
 
-        const result = customerModel.deleteCustomer(id);
-        alert(result.message);
+        const confirmation = await Swal.fire({
+            title: 'Delete Customer?',
+            text: 'Are you sure you want to delete this customer? This cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        });
 
-        if (result.success) {
-            this.loadCustomers();
-            this.clearCustomerForm();
+        if (confirmation.isConfirmed) {
+            const result = customerModel.deleteCustomer(id);
+
+            Swal.fire({
+                icon: result.success ? 'success' : 'error',
+                title: result.success ? 'Deleted!' : 'Cannot Delete!',
+                text: result.message,
+                timer: 3000,
+                showConfirmButton: false
+            });
+
+            if (result.success) {
+                this.loadCustomers();
+                this.clearCustomerForm();
+            }
         }
     }
 

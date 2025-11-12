@@ -15,7 +15,13 @@ class OrderController {
     addToCart(itemId) {
         const result = orderModel.addToCart(itemId);
         if (!result.success) {
-            alert(result.message);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Out of Stock!',
+                text: result.message,
+                timer: 3000,
+                showConfirmButton: false
+            });
         }
         this.updateCartDisplay();
     }
@@ -23,7 +29,13 @@ class OrderController {
     removeFromCart(index) {
         const result = orderModel.removeFromCart(index);
         if (!result.success) {
-            alert(result.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: result.message,
+                timer: 3000,
+                showConfirmButton: false
+            });
         }
         this.updateCartDisplay();
     }
@@ -85,7 +97,13 @@ class OrderController {
 
     openPaymentModal() {
         if (orderModel.getCart().length === 0) {
-            alert('Cart is empty!');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Cart is empty!',
+                text: 'Please add items to the cart before proceeding to payment.',
+                timer: 3000,
+                showConfirmButton: false
+            });
             return;
         }
 
@@ -124,7 +142,13 @@ class OrderController {
         const balance = paidAmount - app.currentGrandTotal;
 
         if (balance < -0.005) {
-            alert('Insufficient paid amount! Please check the amount entered.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Payment Error!',
+                text: 'Insufficient paid amount! Please check the amount entered.',
+                timer: 3000,
+                showConfirmButton: false
+            });
             return;
         }
 
@@ -134,7 +158,14 @@ class OrderController {
 
         const result = orderModel.placeOrder(customerId, discountPercent, paidAmount, balance, totals);
 
-        alert(result.message);
+        Swal.fire({
+            icon: result.success ? 'success' : 'error',
+            title: result.success ? 'Order Placed!' : 'Order Failed!',
+            html: result.message,
+            timer: 5000,
+            showConfirmButton: false
+        });
+
         if (result.success) {
             app.paymentModal.hide();
             this.updateCartDisplay(); // Reset Cart
@@ -185,31 +216,38 @@ class OrderController {
         const order = orderModel.getOrders().find(o => o.id === orderId);
         if (!order) return;
 
-        let items = '';
+        let itemsHtml = '';
         order.items.forEach(item => {
             const menuItem = itemModel.findItem(item.itemId);
-            items += `${menuItem ? menuItem.name : 'Unknown'} x${item.quantity} - LKR ${(item.price * item.quantity).toFixed(2)}\n`;
+            itemsHtml += `<li>${menuItem ? menuItem.name : 'Unknown'} x${item.quantity} - LKR ${(item.price * item.quantity).toFixed(2)}</li>`;
         });
 
         const customer = customerModel.findCustomer(order.customerId);
 
-        const paidInfo = order.paid !== undefined ? `\nPaid: LKR ${order.paid.toFixed(2)}\nBalance/Change: LKR ${order.balance.toFixed(2)}` : '';
+        const paidInfo = order.paid !== undefined ? `<p><strong>Paid:</strong> LKR ${order.paid.toFixed(2)}<br><strong>Change Due:</strong> LKR ${order.balance.toFixed(2)}</p>` : '';
 
-        alert(`
-Order Details - ${order.id}
-Date: ${new Date(order.date).toLocaleString()}
-Customer: ${customer ? customer.name : 'Walk-in'}
-
-Items:
-${items}
-
-Subtotal: LKR ${order.subtotal.toFixed(2)}
-Discount: ${order.discountPercent}% (LKR ${(order.subtotal * (order.discountPercent / 100)).toFixed(2)})
-Tax: LKR ${order.tax.toFixed(2)}
----
-Grand Total: LKR ${order.total.toFixed(2)}${paidInfo}
-Status: ${order.status}
-        `.trim());
+        Swal.fire({
+            title: `Order Details - ${order.id}`,
+            html: `
+                <div style="text-align: left; margin-bottom: 15px;">
+                    <p><strong>Date:</strong> ${new Date(order.date).toLocaleString()}</p>
+                    <p><strong>Customer:</strong> ${customer ? customer.name : 'Walk-in'}</p>
+                </div>
+                <h6 style="text-align: left; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 10px;">Items:</h6>
+                <ul style="list-style-type: none; padding: 0; text-align: left;">
+                    ${itemsHtml}
+                </ul>
+                <div style="text-align: right; border-top: 1px solid #eee; padding-top: 10px;">
+                    <p>Subtotal: LKR ${order.subtotal.toFixed(2)}</p>
+                    <p>Discount: ${order.discountPercent}% (LKR ${(order.subtotal * (order.discountPercent / 100)).toFixed(2)})</p>
+                    <p>Tax: LKR ${order.tax.toFixed(2)}</p>
+                    <h5 style="margin-top: 10px;">Grand Total: LKR ${order.total.toFixed(2)}</h5>
+                </div>
+                ${paidInfo}
+                <p><strong>Status:</strong> <span class="badge ${order.status === 'Paid' ? 'badge-paid' : 'badge-unpaid'}">${order.status}</span></p>
+            `,
+            confirmButtonText: 'Close'
+        });
     }
 }
 
